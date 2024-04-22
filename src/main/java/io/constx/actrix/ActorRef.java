@@ -1,6 +1,5 @@
 package io.constx.actrix;
 
-import io.constx.actrix.impl.ContextedMessage;
 
 public final class ActorRef {
     private final String actorId;
