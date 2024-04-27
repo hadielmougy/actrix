@@ -6,8 +6,6 @@ import java.util.concurrent.*;
 public final class ActorSystem {
 
     private final Map<String, Actor> registry = new HashMap<>();
-    private final Map<String, MailBox> mailboxRegistry = new HashMap<>();
-
     private final ExecutorService orchestrator = Executors.newSingleThreadExecutor();
     private final ExecutorService workers = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ActorMessageMatcher matcher = new ActorMessageMatcher();
