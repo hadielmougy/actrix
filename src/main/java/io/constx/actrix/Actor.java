@@ -22,13 +22,13 @@ public abstract class Actor {
         return id;
     }
 
-    void doReceive(ActorContext ctx, ContextedActorMessage msg) {
+    final void doReceive(ActorContext ctx, ContextedActorMessage msg) {
         this.refId = msg.getReferenceActorId();
-        receive(ctx, msg.getActorMessage());
+        receive(msg.getActorMessage());
     }
 
     protected void init() {}
-    abstract void receive(ActorContext ctx, ActorMessage actorMessage);
+    abstract void receive(ActorMessage actorMessage);
 
     void send(ActorMessage message) {
         Objects.requireNonNull(actorSystem);

@@ -77,7 +77,7 @@ public class ActorTest {
         }
 
         @Override
-        public void receive(ActorContext ctx, ActorMessage actorMessage) {
+        public void receive(ActorMessage actorMessage) {
         }
     }
 
@@ -97,7 +97,7 @@ public class ActorTest {
         }
 
         @Override
-        public void receive(ActorContext ctx, ActorMessage actorMessage) {
+        public void receive(ActorMessage actorMessage) {
         }
     }
 
@@ -110,7 +110,7 @@ public class ActorTest {
         }
 
         @Override
-        public void receive(ActorContext ctx, ActorMessage actorMessage) {
+        public void receive(ActorMessage actorMessage) {
             if (actorMessage instanceof IncrementMessage) {
                 counter++;
             }
@@ -133,7 +133,7 @@ public class ActorTest {
         }
 
         @Override
-        public void receive(ActorContext ctx, ActorMessage actorMessage) {
+        public void receive(ActorMessage actorMessage) {
             if (actorMessage instanceof PongMessage) {
                 counter++;
             }
@@ -148,7 +148,7 @@ public class ActorTest {
         }
 
         @Override
-        public void receive(ActorContext ctx, ActorMessage actorMessage) {
+        public void receive(ActorMessage actorMessage) {
             reply(new PongMessage());
         }
     }
@@ -167,7 +167,7 @@ public class ActorTest {
         }
 
         @Override
-        void receive(ActorContext ctx, ActorMessage actorMessage) {
+        void receive(ActorMessage actorMessage) {
             if (counter == 100_000) {
                 return;
             }
