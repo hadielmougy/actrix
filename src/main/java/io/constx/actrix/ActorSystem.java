@@ -3,22 +3,26 @@ package io.constx.actrix;
 import java.util.*;
 import java.util.concurrent.*;
 
-public final class ActorSystem {
+public final class ActorSystem implements ActorContext {
 
     private final Map<String, Actor> registry = new HashMap<>();
     private final ExecutorService orchestrator = Executors.newSingleThreadExecutor();
+    private final ExecutorService initiator = Executors.newSingleThreadExecutor();
     private final ExecutorService workers = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ActorMessageMatcher matcher = new ActorMessageMatcher();
     private final ExecutorService dispatcher = Executors.newSingleThreadExecutor();
 
     private ActorSystem() {
-
         dispatcher.submit(() -> {
             while(true) {
                 MatchingResult matching = matchingQueue.take();
                 workers.submit(()-> {
-                    registry.get(matching.actorId).doReceive(matching.msg);
-                    orchestrator.submit(() -> matcher.addActor(registry.get(matching.actorId)));
+                    Actor actor = registry.get(matching.actorId);
+                    try {
+                        actor.doReceive(this, matching.msg);
+                    } finally {
+                        orchestrator.submit(() -> matcher.addActor(registry.get(matching.actorId)));
+                    }
                 });
             }
         });
@@ -28,47 +32,51 @@ public final class ActorSystem {
         return new ActorSystem();
     }
 
-    public ActorRef newActor(Actor actor)  {
+    public void register(Actor actor)  {
         registry.put(actor.getId(), actor);
+        actor.setActorSystem(this);
         orchestrator.submit(()-> matcher.addActor(actor));
-        return new ActorRef(actor.getId(), this);
+        initiator.submit(actor::init);
     }
 
-    public void addToMailbox(String actorId, ActorMessage actorMessage) {
-        orchestrator.submit(() -> matcher.addMessage(actorId, actorMessage));
+    public void addToMailbox(String toActorId, ContextedActorMessage msg) {
+        orchestrator.submit(
+                () -> matcher.addMessage(toActorId, msg));
     }
 
     private final BlockingQueue<MatchingResult> matchingQueue = new LinkedBlockingQueue<>();
 
     private class ActorMessageMatcher {
         private final Map<String, Actor> actorMap = new HashMap<>();
-        private final Map<String, Queue<ActorMessage>> actorMailMap = new HashMap<>();
+        private final Map<String, Queue<ContextedActorMessage>> actorMailMap = new HashMap<>();
 
         public void addActor(Actor actor) {
             actorMap.put(actor.getId(), actor);
             if (actorMailMap.get(actor.getId()) == null) {
                 return;
             }
-            propagateMatching(actor.getId());
+            tryMatching(actor.getId());
         }
 
-
-
-        public void addMessage(String actorId, ActorMessage actorMessage) {
+        public void addMessage(String actorId, ContextedActorMessage msg) {
+            if (registry.get(actorId) == null) {
+                System.err.printf("Actor with id %s is not found%n", actorId);
+                return;
+            }
             actorMailMap.putIfAbsent(actorId, new LinkedList<>());
-            actorMailMap.get(actorId).offer(actorMessage);
-            propagateMatching(actorId);
+            actorMailMap.get(actorId).offer(msg);
+            tryMatching(actorId);
         }
 
-        private void propagateMatching(String actorId) {
-            ActorMessage msg = match(actorId);
+        private void tryMatching(String actorId) {
+            ContextedActorMessage msg = match(actorId);
             if (msg != null) {
                 matchingQueue.add(new MatchingResult(actorId, msg));
                 actorMap.remove(actorId);
             }
         }
 
-        public ActorMessage match(String actorId) {
+        public ContextedActorMessage match(String actorId) {
             Actor actor = actorMap.get(actorId);
             if (actor == null) {
                 return null;
@@ -79,9 +87,9 @@ public final class ActorSystem {
 
     private static class MatchingResult {
         public final String actorId;
-        public final ActorMessage msg;
+        public final ContextedActorMessage msg;
 
-        public MatchingResult(String actorId, ActorMessage msg) {
+        public MatchingResult(String actorId, ContextedActorMessage msg) {
             this.actorId = actorId;
             this.msg = msg;
         }
