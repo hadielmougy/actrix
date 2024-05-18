@@ -10,10 +10,9 @@ public final class ActorSystem implements ActorContext {
     private final ExecutorService initiator = Executors.newSingleThreadExecutor();
     private final ExecutorService workers = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ActorMessageMatcher matcher = new ActorMessageMatcher();
-    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor();
 
     private ActorSystem() {
-        dispatcher.submit(() -> {
+        Executors.newSingleThreadExecutor().submit(() -> {
             while(true) {
                 MatchingResult matching = matchingQueue.take();
                 workers.submit(()-> {
