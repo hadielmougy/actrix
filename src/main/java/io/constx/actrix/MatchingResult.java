@@ -1,4 +1,4 @@
 package io.constx.actrix;
 
-record MatchingResult(String actorId, Message msg) {
+public record MatchingResult(String actorId, ActorMessage message) {
 }
