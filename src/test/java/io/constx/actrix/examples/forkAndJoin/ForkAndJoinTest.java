@@ -1,4 +1,4 @@
-package io.constx.actrix.examples.scheduler;
+package io.constx.actrix.examples.forkAndJoin;
 
 import io.constx.actrix.Actor;
 import io.constx.actrix.ActorMessage;
@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import static org.awaitility.Awaitility.waitAtMost;
 
-public class SchedulerTest {
+public class ForkAndJoinTest {
 
     private static final String SCHEDULER_NAME = "non-default-executor";
 
