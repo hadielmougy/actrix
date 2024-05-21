@@ -16,7 +16,7 @@ public abstract class Actor {
         this.id = id;
     }
 
-    public String getScheduler() {
+    public String getSchedulerName() {
         return null;
     }
 

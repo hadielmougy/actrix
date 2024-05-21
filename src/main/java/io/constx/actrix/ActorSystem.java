@@ -19,7 +19,7 @@ public final class ActorSystem implements ActorContext {
             while(true) {
                 MatchingResult matching = matchingQueue.take();
                 Actor actor = registry.get(matching.actorId());
-                ExecutorService scheduler = schedulers.get(actor.getScheduler());
+                ExecutorService scheduler = schedulers.get(actor.getSchedulerName());
                 Objects.requireNonNullElse(scheduler, workers).submit(() -> deliver(actor, matching));
             }
         });

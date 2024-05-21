@@ -46,7 +46,7 @@ public class ForkAndJoinTest {
         }
 
         @Override
-        public String getScheduler() {
+        public String getSchedulerName() {
             // runs in the default scheduler
             return null;
         }
@@ -74,7 +74,7 @@ public class ForkAndJoinTest {
     public static final class WorkerActor extends Actor {
 
         @Override
-        public String getScheduler() {
+        public String getSchedulerName() {
             // runs in externally registered scheduler
             return SCHEDULER_NAME;
         }
