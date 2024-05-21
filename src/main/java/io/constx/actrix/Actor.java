@@ -8,9 +8,6 @@ public abstract class Actor {
 
     protected final String id;
     private ActorSystem actorSystem;
-    private String refId;
-    private ActorRef sender;
-
     public Actor() {
         this(UUID.randomUUID().toString());
     }
@@ -23,25 +20,19 @@ public abstract class Actor {
         return id;
     }
 
-    protected final void doReceive(Message msg) {
-        this.refId = msg.senderId();
-        sender = new ActorRef(refId, actorSystem);
-        receive(msg.message());
+    final void doReceive(ActorMessage message) {
+        receive(message);
     }
 
     protected abstract void receive(ActorMessage actorMessage);
 
     protected final void send(ActorMessage message) {
         Objects.requireNonNull(actorSystem);
-        actorSystem.addToMailbox(getId(), new Message(getId(), message));
+        actorSystem.addToMailbox(getId(), message);
     }
 
     protected final void send(ActorRef to, ActorMessage message) {
-        to.send(new Message(getId(), message));
-    }
-
-    protected final void reply(ActorMessage message) {
-        sender.send(new Message(getId(), message));
+        to.send(message);
     }
 
     protected final ActorRef getRef() {
@@ -65,7 +56,4 @@ public abstract class Actor {
         this.actorSystem = actorSystem;
     }
 
-    final Message messageOf(ActorMessage actorMessage) {
-        return new Message(getId(), actorMessage);
-    }
 }

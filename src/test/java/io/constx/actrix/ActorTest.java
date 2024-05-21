@@ -11,8 +11,8 @@ public class ActorTest {
     public void testSendReceive() {
         ActorSystem system = ActorSystem.newSystem();
         ReceiverActor receiverActor = new ReceiverActor("receiver-actor");
-        ActorRef receiverRef = system.ofActor(receiverActor);
-        ActorRef senderRef = system.ofActor(new SenderActor(receiverRef));
+        ActorRef receiverRef = system.register(receiverActor);
+        ActorRef senderRef = system.register(new SenderActor(receiverRef));
         senderRef.send(new IncrementMessage());
         waitAtMost(Duration.ofSeconds(1)).until(() -> receiverActor.counter == 1);
     }
@@ -21,8 +21,8 @@ public class ActorTest {
     public void testSendReceive100_000() {
         ActorSystem system = ActorSystem.newSystem();
         ReceiverActor receiverActor = new ReceiverActor("receiver-actor");
-        ActorRef receiverRef = system.ofActor(receiverActor);
-        ActorRef senderRef = system.ofActor(new SenderActor(receiverRef));
+        ActorRef receiverRef = system.register(receiverActor);
+        ActorRef senderRef = system.register(new SenderActor(receiverRef));
         for (int i = 0; i < 100_000; i++) {
             senderRef.send(new IncrementMessage());
         }
@@ -34,9 +34,9 @@ public class ActorTest {
         ActorSystem system = ActorSystem.newSystem();
         ReceiverActor receiverActor01 = new ReceiverActor("receiver-actor-01");
         ReceiverActor receiverActor02 = new ReceiverActor("receiver-actor-02");
-        var receiverActor01Ref = system.ofActor(receiverActor01);
-        var receiverActor02Ref = system.ofActor(receiverActor02);
-        var dualSenderActorRef = system.ofActor(new DualSenderActor(receiverActor01Ref, receiverActor02Ref, "sender-actor"));
+        var receiverActor01Ref = system.register(receiverActor01);
+        var receiverActor02Ref = system.register(receiverActor02);
+        var dualSenderActorRef = system.register(new DualSenderActor(receiverActor01Ref, receiverActor02Ref, "sender-actor"));
         for (int i = 0; i < 200_000; i++) {
             dualSenderActorRef.send(new IncrementMessage());
         }
@@ -48,9 +48,9 @@ public class ActorTest {
     public void testPingPong() {
         ActorSystem system    = ActorSystem.newSystem();
         PongActor pongActor   = new PongActor("pong-actor");
-        ActorRef pongActorRef = system.ofActor(pongActor);
+        ActorRef pongActorRef = system.register(pongActor);
         PingActor pingActor   = new PingActor(pongActorRef, "ping-actor");
-        ActorRef pingActorRef = system.ofActor(pingActor);
+        ActorRef pingActorRef = system.register(pingActor);
 
         for (int i = 0; i < 100_000; i++) {
             pingActorRef.send(new PingMessage());
@@ -63,7 +63,7 @@ public class ActorTest {
     public void testSelfCall() {
         ActorSystem system = ActorSystem.newSystem();
         var selfCallActor = new SelfCallActor();
-        var selfCallActorRef = system.ofActor(selfCallActor);
+        var selfCallActorRef = system.register(selfCallActor);
         selfCallActorRef.send(new IncrementMessage());
         waitAtMost(Duration.ofSeconds(5)).until(() -> selfCallActor.counter == 100_000);
     }
@@ -133,7 +133,8 @@ public class ActorTest {
         public void receive(ActorMessage actorMessage) {
 
             if (actorMessage instanceof PingMessage) {
-                pongActorRef.send(messageOf(actorMessage));
+                ((PingMessage) actorMessage).responseTo = getRef();
+                pongActorRef.send(actorMessage);
             }
 
             if (actorMessage instanceof PongMessage) {
@@ -151,7 +152,7 @@ public class ActorTest {
 
         @Override
         public void receive(ActorMessage actorMessage) {
-            reply(new PongMessage());
+            send(((PingMessage)actorMessage).responseTo, new PongMessage());
         }
     }
 
@@ -185,6 +186,7 @@ public class ActorTest {
     }
 
     private static final class PingMessage implements ActorMessage {
+        ActorRef responseTo;
 
     }
 }

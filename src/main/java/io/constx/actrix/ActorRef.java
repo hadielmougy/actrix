@@ -11,11 +11,7 @@ public class ActorRef {
         this.actorSystem = actorSystem;
     }
 
-    public final void send(ActorMessage actorMessage) {
-        send(new Message(null, actorMessage));
-    }
-
-    public final void send(Message message) {
+    public final void send(ActorMessage message) {
         actorSystem.addToMailbox(actorId, message);
     }
 }
