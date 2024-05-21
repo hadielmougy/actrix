@@ -8,7 +8,7 @@ import java.util.concurrent.BlockingQueue;
 
 final class ActorMessageMatcher {
     private final Map<String, Actor> actorMap = new HashMap<>();
-    private final Map<String, Queue<ContextedActorMessage>> actorMailMap = new HashMap<>();
+    private final Map<String, Queue<Message>> actorMailMap = new HashMap<>();
     private final BlockingQueue<MatchingResult> matchingQueue;
 
     ActorMessageMatcher(BlockingQueue<MatchingResult> matchingQueue) {
@@ -23,21 +23,21 @@ final class ActorMessageMatcher {
         tryMatching(actor.getId());
     }
 
-    public void addMessage(String actorId, ContextedActorMessage msg) {
+    public void addMessage(String actorId, Message msg) {
         actorMailMap.putIfAbsent(actorId, new LinkedList<>());
         actorMailMap.get(actorId).offer(msg);
         tryMatching(actorId);
     }
 
     private void tryMatching(String actorId) {
-        ContextedActorMessage msg = match(actorId);
+        Message msg = match(actorId);
         if (msg != null) {
             matchingQueue.add(new MatchingResult(actorId, msg));
             actorMap.remove(actorId);
         }
     }
 
-    public ContextedActorMessage match(String actorId) {
+    public Message match(String actorId) {
         Actor actor = actorMap.get(actorId);
         if (actor == null) {
             return null;

@@ -6,9 +6,10 @@ import java.util.UUID;
 
 public abstract class Actor {
 
-    private final String id;
+    protected final String id;
     private ActorSystem actorSystem;
     private String refId;
+    private ActorRef sender;
 
     public Actor() {
         this(UUID.randomUUID().toString());
@@ -22,32 +23,29 @@ public abstract class Actor {
         return id;
     }
 
-    final void doReceive(ActorContext ctx, ContextedActorMessage msg) {
-        this.refId = msg.getReferenceActorId();
-        receive(msg.getActorMessage());
+    protected final void doReceive(Message msg) {
+        this.refId = msg.senderId();
+        sender = new ActorRef(refId, actorSystem);
+        receive(msg.message());
     }
 
-    protected void init() {}
-    abstract void receive(ActorMessage actorMessage);
+    protected abstract void receive(ActorMessage actorMessage);
 
-    void send(ActorMessage message) {
+    protected final void send(ActorMessage message) {
         Objects.requireNonNull(actorSystem);
-        actorSystem.addToMailbox(getId(), new ContextedActorMessage(getId(), message));
-    }
-    void send(String dest, ActorMessage message) {
-        Objects.requireNonNull(actorSystem);
-        actorSystem.addToMailbox(dest, new ContextedActorMessage(getId(), message));
+        actorSystem.addToMailbox(getId(), new Message(getId(), message));
     }
 
-    void reply(ActorMessage message) {
-        send(refId, message);
+    protected final void send(ActorRef to, ActorMessage message) {
+        to.send(new Message(getId(), message));
     }
 
-    @Override
-    public String toString() {
-        return "Actor{" +
-                "id='" + id + '\'' +
-                '}';
+    protected final void reply(ActorMessage message) {
+        sender.send(new Message(getId(), message));
+    }
+
+    protected final ActorRef getRef() {
+        return new ActorRef(getId(), actorSystem);
     }
 
     @Override
@@ -65,5 +63,9 @@ public abstract class Actor {
 
     final void setActorSystem(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
+    }
+
+    final Message messageOf(ActorMessage actorMessage) {
+        return new Message(getId(), actorMessage);
     }
 }
