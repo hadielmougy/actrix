@@ -1,4 +1,4 @@
-package io.constx.actrix.requestReply;
+package io.constx.actrix.examples.requestReply;
 
 import io.constx.actrix.Actor;
 import io.constx.actrix.ActorMessage;

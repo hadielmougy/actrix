@@ -5,7 +5,7 @@ import java.time.Duration;
 
 import static org.awaitility.Awaitility.*;
 
-public class ActorTest {
+public class ActorsWithLoadTest {
 
     @RepeatedTest(2)
     public void testSendReceive() {
