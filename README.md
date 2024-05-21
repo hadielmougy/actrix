@@ -1,6 +1,6 @@
 # Actrix
 
-Fault tolerance library for java
+Actor model for java
 
 ## Usage
 
